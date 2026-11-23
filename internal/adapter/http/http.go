@@ -86,6 +86,16 @@ func uid(c fiber.Ctx) string { return fiber.Locals[string](c, userKey{}) }
 
 // --- validasi & error ---
 
+// bind membaca body JSON dan memvalidasinya. Body rusak/bukan JSON -> 400; gagal validasi -> 422 (validationError).
+func bind(c fiber.Ctx, out any) error {
+	err := c.Bind().Body(out)
+	var ve validationError
+	if err == nil || errors.As(err, &ve) {
+		return err
+	}
+	return fiber.NewError(fiber.StatusBadRequest, "body request harus berupa JSON yang valid")
+}
+
 type structValidator struct{ v *validator.Validate }
 
 type validationError map[string]string

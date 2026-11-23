@@ -110,3 +110,12 @@ func TestFlow(t *testing.T) {
 		t.Fatalf("setelah hapus %d", code)
 	}
 }
+
+func TestBodyBukanJSON(t *testing.T) {
+	app := newApp()
+	for _, body := range []string{"", "bukan json", `{"email":`} {
+		if code, _ := call(t, app, "POST", "/api/v1/auth/login", "", body); code != http.StatusBadRequest {
+			t.Fatalf("body %q harus 400, dapat %d", body, code)
+		}
+	}
+}

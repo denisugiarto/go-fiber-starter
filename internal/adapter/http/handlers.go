@@ -56,7 +56,7 @@ type noteReq struct {
 
 func (h *handler) register(c fiber.Ctx) error {
 	var r registerReq
-	if err := c.Bind().Body(&r); err != nil {
+	if err := bind(c, &r); err != nil {
 		return err
 	}
 	u, err := h.auth.Register(c.Context(), r.Email, r.Name, r.Password)
@@ -68,7 +68,7 @@ func (h *handler) register(c fiber.Ctx) error {
 
 func (h *handler) login(c fiber.Ctx) error {
 	var r loginReq
-	if err := c.Bind().Body(&r); err != nil {
+	if err := bind(c, &r); err != nil {
 		return err
 	}
 	tok, u, err := h.auth.Login(c.Context(), r.Email, r.Password)
@@ -100,7 +100,7 @@ func (h *handler) listNotes(c fiber.Ctx) error {
 
 func (h *handler) createNote(c fiber.Ctx) error {
 	var r noteReq
-	if err := c.Bind().Body(&r); err != nil {
+	if err := bind(c, &r); err != nil {
 		return err
 	}
 	n, err := h.notes.Create(c.Context(), uid(c), r.Title, r.Body)
@@ -120,7 +120,7 @@ func (h *handler) getNote(c fiber.Ctx) error {
 
 func (h *handler) updateNote(c fiber.Ctx) error {
 	var r noteReq
-	if err := c.Bind().Body(&r); err != nil {
+	if err := bind(c, &r); err != nil {
 		return err
 	}
 	n, err := h.notes.Update(c.Context(), uid(c), c.Params("id"), r.Title, r.Body)
