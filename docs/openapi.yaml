@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Go Fiber Starter API
+  version: 0.1.0
+  description: Template starter. Semua endpoint di bawah /api/v1 memakai JSON.
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get: { summary: Liveness, responses: { "200": { description: OK } } }
+  /ready:
+    get: { summary: Readiness (cek database), responses: { "200": { description: Siap }, "503": { description: Belum siap } } }
+  /api/v1/auth/register:
+    post:
+      summary: Daftar akun
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Register" } } } }
+      responses:
+        "201": { description: Dibuat, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/login:
+    post:
+      summary: Masuk dan dapatkan token
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Login" } } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Token" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/me:
+    get:
+      summary: Profil pengguna saat ini
+      security: [{ bearer: [] }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/notes:
+    get:
+      summary: Daftar catatan milik saya
+      security: [{ bearer: [] }]
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Note" } } } } }, "401": { $ref: "#/components/responses/Error" } }
+    post:
+      summary: Buat catatan
+      security: [{ bearer: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/NoteInput" } } } }
+      responses: { "201": { description: Dibuat, content: { application/json: { schema: { $ref: "#/components/schemas/Note" } } } }, "401": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" } }
+  /api/v1/notes/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      summary: Detail catatan
+      security: [{ bearer: [] }]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Note" } } } }, "404": { $ref: "#/components/responses/Error" } }
+    put:
+      summary: Ubah catatan
+      security: [{ bearer: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/NoteInput" } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Note" } } } }, "404": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" } }
+    delete:
+      summary: Hapus catatan
+      security: [{ bearer: [] }]
+      responses: { "204": { description: Dihapus }, "404": { $ref: "#/components/responses/Error" } }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  responses:
+    Error:
+      description: Format error seragam
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  schemas:
+    Register:
+      type: object
+      required: [email, name, password]
+      properties: { email: { type: string, format: email }, name: { type: string, minLength: 2, maxLength: 100 }, password: { type: string, minLength: 8, maxLength: 72 } }
+    Login:
+      type: object
+      required: [email, password]
+      properties: { email: { type: string, format: email }, password: { type: string } }
+    User:
+      type: object
+      properties: { id: { type: string }, email: { type: string }, name: { type: string }, created_at: { type: string, format: date-time } }
+    Token:
+      type: object
+      properties: { access_token: { type: string }, token_type: { type: string, example: Bearer }, user: { $ref: "#/components/schemas/User" } }
+    NoteInput:
+      type: object
+      required: [title]
+      properties: { title: { type: string, maxLength: 200 }, body: { type: string, maxLength: 10000 } }
+    Note:
+      type: object
+      properties: { id: { type: string }, title: { type: string }, body: { type: string }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties: { code: { type: string }, message: { type: string }, details: { type: object, additionalProperties: { type: string } } }
